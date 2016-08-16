@@ -139,15 +139,15 @@ func (w *Watcher) RemoveWatch(path string) error {
 	if !ok {
 		return errors.New(fmt.Sprintf("can't remove non-existent inotify watch for: %s", path))
 	}
-	success, errno := syscall.InotifyRmWatch(w.fd, watch.wd)
-	if !ok && success == -1 {
-		return os.NewSyscallError("inotify_rm_watch", errno)
-	}
 	delete(w.watches, path)
 	// Locking here to protect the read from paths in readEvents.
 	w.mu.Lock()
 	delete(w.paths, int(watch.wd))
 	w.mu.Unlock()
+	success, errno := syscall.InotifyRmWatch(w.fd, watch.wd)
+	if success == -1 {
+		return os.NewSyscallError("inotify_rm_watch", errno)
+	}
 	return nil
 }
 
